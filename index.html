@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Site</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My First Bootstrap Site</title>
 </head>
-<body>
-  <h1>Hello World 🚀</h1>
-  <p>This is my first GitHub Pages site.</p>
-  <script src="bundle.js"></script>
+<body class="container py-5">
+  <h1 class="text-primary">Hello World 🚀</h1>
+  <p class="lead">This is my first GitHub Pages site using TypeScript + Bootstrap.</p>
+  <button class="btn btn-success" id="myButton">Click Me!</button>
+
+  <!-- Webpack bundle -->
+  <script src="dist/bundle.js"></script>
 </body>
 </html>
