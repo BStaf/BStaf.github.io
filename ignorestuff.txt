@@ -7,3 +7,4 @@ dump_tree.py
 mystuff.txt
 package-lock.json
 README.md
+.env
