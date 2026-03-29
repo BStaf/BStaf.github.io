@@ -1,30 +1,56 @@
-import { createAuth0Client, Auth0Client } from '@auth0/auth0-spa-js';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Auth0Client } from '@auth0/auth0-spa-js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { auth } from './auth';
 
 /* -----------------------
-   Global Variables
+   Types
 ------------------------ */
-
-let auth0: Auth0Client;
-let supabase: SupabaseClient;
+type FirstTableRow = {
+  id: number;
+  name: string;
+};
 
 /* -----------------------
-  DB
+   Base Supabase Client
 ------------------------ */
+const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY!;
 
-function setupSupabase(): SupabaseClient {
-  return createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.VITE_SUPABASE_ANON_KEY!
-  );
+/**
+ * Helper wrapper to get a fresh token and make Supabase calls
+ */
+async function supabaseCall<T>(
+  auth0: Auth0Client,
+  callback: (client: SupabaseClient) => Promise<{ data: T | null; error: any }>
+): Promise<{ data: T | null; error: any }> {
+  
+  const token = await auth0.getTokenSilently();
+  console.log('JWT claims:', decodeJwt(token));
+
+  // Create temporary Supabase client per call with fresh token
+  const client = createClient(supabaseUrl, supabaseKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  });
+
+  return callback(client);
 }
 
-async function fetchFirstTable(outputDiv: HTMLPreElement) {
-  const { data, error } = await supabase
-    .from('FirstTable')
-    .select('*');
+/**
+ * Fetch FirstTable data using fresh JWT
+ */
+
+
+async function fetchFirstTable(auth0: Auth0Client, outputDiv: HTMLPreElement) {
+  const { data, error } = await supabaseCall<FirstTableRow[]>(
+    auth0,
+    async (client) => client.from('FirstTable').select('*')
+  );
 
   if (error) {
     outputDiv.textContent = 'Error: ' + error.message;
@@ -35,65 +61,19 @@ async function fetchFirstTable(outputDiv: HTMLPreElement) {
 }
 
 /* -----------------------
-   Auth
------------------------- */
-
-async function getAuthClient(){
-  return await createAuth0Client({
-    domain: process.env.VITE_AUTH0_DOMAIN!,
-    clientId: process.env.VITE_AUTH0_CLIENT_ID!,
-    cacheLocation: 'localstorage',
-    //useRefreshTokens: true,
-  });
-}
-
-async function runAuth(){
-  auth0 = await getAuthClient();
-  console.log("running auth");
-
-  if (window.location.search.includes('code=')) {
-    console.log("redirect detected");
-    await auth0.handleRedirectCallback();
-    window.history.replaceState({}, document.title, '/');
-  }
-
-  return await auth0.isAuthenticated();
-}
-
-async function login() {
-  await auth0.loginWithRedirect({
-    authorizationParams: {
-      redirect_uri: 'http://localhost:5000/',
-    },
-  });
-}
-
-function logout() {
-  auth0.logout({
-    logoutParams: {
-      returnTo: 'http://localhost:5000/',
-    },
-  });
-}
-
-/* -----------------------
    UI Logic
 ------------------------ */
-
 async function init(
   loginBtn: HTMLButtonElement,
   logoutBtn: HTMLButtonElement,
   fetchBtn: HTMLButtonElement,
-  outputDiv: HTMLPreElement
-): Promise<void> {
-
-  // Event Listeners
-  loginBtn.addEventListener('click', login);
-  logoutBtn.addEventListener('click', logout);
-  fetchBtn.addEventListener('click', () => fetchFirstTable(outputDiv));
+  outputDiv: HTMLPreElement,
+  auth0: Auth0Client
+) {
+  loginBtn.addEventListener('click', () => auth.login(auth0));
+  logoutBtn.addEventListener('click', () => auth.logout(auth0));
+  fetchBtn.addEventListener('click', () => fetchFirstTable(auth0, outputDiv));
 }
-
-
 
 function updateUI(
   isAuthenticated: boolean,
@@ -106,12 +86,16 @@ function updateUI(
   fetchBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
 }
 
+function decodeJwt(token: string) {
+  const payload = token.split('.')[1];
+  const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+  return JSON.parse(decoded);
+}
+
 /* -----------------------
    App Init
 ------------------------ */
-
 async function initApp() {
-  // Safely retrieve DOM elements AFTER page load
   const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement;
   const logoutBtn = document.getElementById('logoutBtn') as HTMLButtonElement;
   const fetchBtn = document.getElementById('fetchBtn') as HTMLButtonElement;
@@ -121,12 +105,15 @@ async function initApp() {
     throw new Error('Required DOM elements not found.');
   }
 
-  supabase = setupSupabase();
-  init(loginBtn, logoutBtn, fetchBtn, outputDiv);
-  
-  let isAuthenticated = await runAuth();
+  const auth0 = await auth.getAuthClient();
 
-  updateUI(isAuthenticated, loginBtn, logoutBtn, fetchBtn);
+  init(loginBtn, logoutBtn, fetchBtn, outputDiv, auth0);
+
+  const isAuthenticated = await auth.runAuth(auth0);
+  if (isAuthenticated) {
+    console.log('authenticated');
+    updateUI(isAuthenticated, loginBtn, logoutBtn, fetchBtn);
+  }
 }
 
 initApp();
