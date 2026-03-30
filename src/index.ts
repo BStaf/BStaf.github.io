@@ -25,11 +25,10 @@ async function supabaseCall<T>(
   auth0: Auth0Client,
   callback: (client: SupabaseClient) => Promise<{ data: T | null; error: any }>
 ): Promise<{ data: T | null; error: any }> {
-  
   const token = await auth0.getTokenSilently();
-  console.log('JWT claims:', decodeJwt(token));
 
-  // Create temporary Supabase client per call with fresh token
+  console.log('Decoded JWT (browser):', decodeJwt(token));
+
   const client = createClient(supabaseUrl, supabaseKey, {
     global: {
       headers: {
@@ -42,10 +41,8 @@ async function supabaseCall<T>(
 }
 
 /**
- * Fetch FirstTable data using fresh JWT
+ * Fetch FirstTable data
  */
-
-
 async function fetchFirstTable(auth0: Auth0Client, outputDiv: HTMLPreElement) {
   const { data, error } = await supabaseCall<FirstTableRow[]>(
     auth0,
@@ -72,7 +69,10 @@ async function init(
 ) {
   loginBtn.addEventListener('click', () => auth.login(auth0));
   logoutBtn.addEventListener('click', () => auth.logout(auth0));
-  fetchBtn.addEventListener('click', () => fetchFirstTable(auth0, outputDiv));
+
+  fetchBtn.addEventListener('click', async () => {
+    await fetchFirstTable(auth0, outputDiv);
+  });
 }
 
 function updateUI(
@@ -110,6 +110,7 @@ async function initApp() {
   init(loginBtn, logoutBtn, fetchBtn, outputDiv, auth0);
 
   const isAuthenticated = await auth.runAuth(auth0);
+
   if (isAuthenticated) {
     console.log('authenticated');
     updateUI(isAuthenticated, loginBtn, logoutBtn, fetchBtn);
