@@ -1,61 +1,8 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Auth0Client } from '@auth0/auth0-spa-js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { auth } from './auth';
-
-/* -----------------------
-   Types
------------------------- */
-type FirstTableRow = {
-  id: number;
-  name: string;
-};
-
-/* -----------------------
-   Base Supabase Client
------------------------- */
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY!;
-
-/**
- * Helper wrapper to get a fresh token and make Supabase calls
- */
-async function supabaseCall<T>(
-  auth0: Auth0Client,
-  callback: (client: SupabaseClient) => Promise<{ data: T | null; error: any }>
-): Promise<{ data: T | null; error: any }> {
-  const token = await auth0.getTokenSilently();
-
-  console.log('Decoded JWT (browser):', decodeJwt(token));
-
-  const client = createClient(supabaseUrl, supabaseKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  });
-
-  return callback(client);
-}
-
-/**
- * Fetch FirstTable data
- */
-async function fetchFirstTable(auth0: Auth0Client, outputDiv: HTMLPreElement) {
-  const { data, error } = await supabaseCall<FirstTableRow[]>(
-    auth0,
-    async (client) => client.from('FirstTable').select('*')
-  );
-
-  if (error) {
-    outputDiv.textContent = 'Error: ' + error.message;
-    return;
-  }
-
-  outputDiv.textContent = JSON.stringify(data, null, 2);
-}
+import { fetchFirstTable } from './dataRepo';
 
 /* -----------------------
    UI Logic
@@ -84,12 +31,6 @@ function updateUI(
   loginBtn.style.display = isAuthenticated ? 'none' : 'inline-block';
   logoutBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
   fetchBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
-}
-
-function decodeJwt(token: string) {
-  const payload = token.split('.')[1];
-  const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-  return JSON.parse(decoded);
 }
 
 /* -----------------------
