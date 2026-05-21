@@ -29,14 +29,14 @@ jobs:
 
     - name: Build
       env:
-          VITE_AUTH0_DOMAIN: "https://example.com"
+          VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
           VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
       run: |
         npm install
-        npx webpack --mode production
+        npm run build
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
