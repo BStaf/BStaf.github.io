@@ -1,8 +1,0 @@
-Auth0 Action to set role claims:
-exports.onExecutePostLogin = async (event, api) => {
-  api.accessToken.setCustomClaim('https://myapp.com/roles', event.authorization?.roles);
-  api.accessToken.setCustomClaim('role', 'authenticated');
-};
-
-Supabase Policy to accept claim:
-(((current_setting('request.jwt.claims'::text, true))::jsonb -> 'https://myapp.com/roles'::text) ? 'Supabase ReadOnly'::text)
