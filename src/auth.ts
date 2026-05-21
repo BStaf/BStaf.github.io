@@ -2,11 +2,11 @@ import { createAuth0Client, Auth0Client } from '@auth0/auth0-spa-js';
 
 async function getAuthClient() {
   return await createAuth0Client({
-    domain: process.env.VITE_AUTH0_DOMAIN!,
-    clientId: process.env.VITE_AUTH0_CLIENT_ID!,
+    domain: import.meta.env.VITE_AUTH0_DOMAIN!,
+    clientId: import.meta.env.VITE_AUTH0_CLIENT_ID!,
     cacheLocation: 'localstorage',
     authorizationParams: {
-      audience: process.env.VITE_AUTH0_AUDIENCE!,
+      audience: import.meta.env.VITE_AUTH0_AUDIENCE!,
     },
   });
 }
@@ -20,10 +20,12 @@ async function runAuth(auth0: Auth0Client) {
   return await auth0.isAuthenticated();
 }
 
+const baseUrl = window.location.origin;
+
 async function login(auth0: Auth0Client) {
   await auth0.loginWithRedirect({
     authorizationParams: {
-      redirect_uri: 'http://localhost:5000/',
+      redirect_uri: baseUrl,
     },
   });
 }
@@ -31,7 +33,7 @@ async function login(auth0: Auth0Client) {
 function logout(auth0: Auth0Client) {
   auth0.logout({
     logoutParams: {
-      returnTo: 'http://localhost:5000/',
+      returnTo: baseUrl,
     },
   });
 }
