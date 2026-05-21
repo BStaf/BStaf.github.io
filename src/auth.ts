@@ -12,12 +12,9 @@ async function getAuthClient() {
 }
 
 async function runAuth(auth0: Auth0Client) {
-  console.log("running auth");
-
   if (window.location.search.includes('code=')) {
-    console.log("redirect detected");
     await auth0.handleRedirectCallback();
-    window.history.replaceState({}, document.title, '/');
+    window.history.replaceState({}, document.title, window.location.pathname);
   }
 
   return await auth0.isAuthenticated();
