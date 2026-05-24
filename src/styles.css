@@ -1,0 +1,42 @@
+:root {
+  --bg-color: #000000;
+  --header-color: #1c122e;
+  --text-color: #836fa8;
+  --accent-color: #F25912;
+}
+
+html, body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.navbar {
+  background-color: var(--header-color) !important;
+}
+
+.navbar-brand, .nav-text {
+  color: var(--accent-color) !important;
+}
+
+.btn-outline-light {
+  color: var(--text-color);
+  border-color: var(--text-color);
+}
+
+.btn-outline-light:hover {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+.card {
+  background-color: var(--bg-color);
+  border-color: var(--text-color);
+}
+
+.card-title {
+  color: var(--accent-color) !important;
+}
+
+.card-text {
+  color: var(--text-color);
+}
