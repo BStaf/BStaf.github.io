@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
 </head>
-<body class="container py-5">
-  <h1 class="text-primary">Dashboard</h1>
-  <div class="my-3">
-    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+<body>
+  <nav class="navbar px-3">
+    <span class="navbar-brand fs-3">Dashboard</span>
+    <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+  </nav>
+  <div class="container py-5">
+    <div id="posts">Loading...</div>
   </div>
-  <div id="posts">Loading...</div>
-    <script type="module" src="/src/dashboard.ts"></script>
+  <script type="module" src="/src/dashboard.ts"></script>
 </body>
 </html>
